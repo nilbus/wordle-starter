@@ -3,8 +3,17 @@
 require 'httparty'
 require 'json'
 require 'date'
+require 'set'
 
 class WordleOptimizer
+  LETTER_FREQUENCIES = {
+    'e' => 12.7, 't' => 9.1, 'a' => 8.2, 'o' => 7.5, 'i' => 7.0, 'n' => 6.7,
+    's' => 6.3, 'h' => 6.1, 'r' => 6.0, 'd' => 4.3, 'l' => 4.0, 'c' => 2.8,
+    'u' => 2.8, 'm' => 2.4, 'w' => 2.4, 'f' => 2.2, 'g' => 2.0, 'y' => 2.0,
+    'p' => 1.9, 'b' => 1.5, 'v' => 1.0, 'k' => 0.8, 'j' => 0.15, 'x' => 0.15,
+    'q' => 0.10, 'z' => 0.07
+  }.freeze
+
   def initialize
     @solutions_dir = File.join(Dir.pwd, 'solutions')
     @used_words = File.readlines('used-up-to-2025-06-01.txt').map(&:strip)
@@ -75,9 +84,20 @@ class WordleOptimizer
       JSON.parse(File.read(file))['solution']
     end
 
-    solutions.sum do |solution|
+    base_score = solutions.sum do |solution|
       score_against_solution(word, solution)
     end
+
+    # Add a bonus for words with unique letters
+    # The bonus is 10% of the base score if all letters are unique
+    unique_letters_bonus = word.chars.uniq.length == 5 ? base_score * 0.1 : 0
+
+    # Add letter frequency bonus (smaller than the unique letters bonus to maintain primary scoring)
+    # We use the average frequency of the letters in the word
+    frequency_bonus = word.chars.map { |c| LETTER_FREQUENCIES[c] || 0 }.sum / 5.0
+    frequency_bonus = frequency_bonus * 0.05  # Scale down to 5% of the frequency score
+
+    base_score + unique_letters_bonus + frequency_bonus
   end
 
   def score_against_solution(word, solution)
