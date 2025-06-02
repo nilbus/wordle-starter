@@ -1,0 +1,36 @@
+# Wordle Optimization Project Plan
+
+## Phase 1: Project Setup
+- [x] Create basic directory structure
+- [ ] Initialize git repository
+- [ ] Create README.md with project description
+- [ ] Set up RSpec testing framework
+- [ ] Create Gemfile with required dependencies
+
+## Phase 2: Data Collection
+- [ ] Create script to download and parse Wordle answers from wordfinder.yourdictionary.com
+- [ ] Save historical answers to used-up-to-2025-06-01.txt
+- [ ] Create script to download future solutions from NYT API
+- [ ] Implement caching mechanism for downloaded solutions
+
+## Phase 3: Word Processing
+- [ ] Create word filtering system
+  - [ ] Remove used words from unused.txt
+  - [ ] Implement solution exclusion logic
+- [ ] Port scoring algorithm from 5score.rb
+- [ ] Create word scoring system against future solutions
+
+## Phase 4: Optimization
+- [ ] Implement main optimization logic
+- [ ] Create command-line interface
+- [ ] Add progress reporting
+
+## Phase 5: Testing
+- [ ] Write unit tests for each component
+- [ ] Write integration tests
+- [ ] Test edge cases and error handling
+
+## Phase 6: Documentation and Polish
+- [ ] Add detailed documentation
+- [ ] Add usage examples
+- [ ] Final code review and cleanup
