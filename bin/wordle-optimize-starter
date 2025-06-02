@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require 'httparty'
+require_relative '../lib/wordle_optimizer'
+
+WordleOptimizer.new.run
