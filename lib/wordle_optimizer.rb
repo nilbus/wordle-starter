@@ -12,11 +12,11 @@ class WordleOptimizer
     ensure_solutions_dir
   end
 
-  def run
+  def run(show_top_100: false)
     download_future_solutions
     filter_eligible_words
     score_words
-    display_results
+    display_results(show_top_100)
   end
 
   private
@@ -114,11 +114,29 @@ class WordleOptimizer
     green_matches * 3 + yellow_matches
   end
 
-  def display_results
-    puts "\nTop 100 optimal starting words:"
-    puts "----------------------------"
-    @scores.first(100).each_with_index do |(word, score), i|
-      puts "#{i + 1}. #{word.upcase} (Score: #{score})"
+  def display_results(show_top_100 = false)
+    if show_top_100
+      puts "\nTop 100 optimal starting words:"
+      puts "----------------------------"
+      @scores.first(100).each_with_index do |(word, score), i|
+        puts "#{i + 1}. #{word.upcase} (Score: #{score})"
+      end
+    else
+      puts "\nOptimal starting word pair:"
+      puts "----------------------------"
+
+      top_word = @scores.first[0]
+      puts "1. #{top_word.upcase} (Score: #{@scores.first[1]})"
+
+      # Find the next best word that shares no letters with the top word
+      top_word_chars = top_word.chars.to_set
+      next_word = @scores[1..].find { |word, _| (word.chars.to_set & top_word_chars).empty? }
+
+      if next_word
+        puts "2. #{next_word[0].upcase} (Score: #{next_word[1]})"
+      else
+        puts "No suitable second word found that shares no letters with #{top_word.upcase}"
+      end
     end
   end
 end

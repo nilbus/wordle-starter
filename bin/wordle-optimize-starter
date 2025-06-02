@@ -3,4 +3,5 @@
 require 'httparty'
 require_relative '../lib/wordle_optimizer'
 
-WordleOptimizer.new.run
+show_top_100 = ARGV.include?('--100')
+WordleOptimizer.new.run(show_top_100: show_top_100)
