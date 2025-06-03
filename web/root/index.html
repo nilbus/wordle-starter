@@ -1,111 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordle Start Word of the Day</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            color: #1a1a1a;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .word-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .word-item {
-            background-color: #f8f9fa;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-        .word-item-line {
-            background-color: #f8f9fa;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 2em;
-            grid-column: 1 / -1;
-            text-align: center;
-        }
-        .explainer-line {
-            padding: 8px 12px;
-            border-radius: 4px;
-            grid-column: 1 / -1;
-            text-align: center;
-        }
-        .controls {
-            margin: 20px 0;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .loading {
-            text-align: center;
-            margin: 20px 0;
-            display: none;
-        }
-        .last-updated {
-            text-align: center;
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wordle Start Word of the Day</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #1a1a1a;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .word-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .word-item {
+      background-color: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .word-item-line {
+      background-color: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 2em;
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+    .explainer-line {
+      padding: 8px 12px;
+      border-radius: 4px;
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .loading {
+      text-align: center;
+      margin: 20px 0;
+      display: none;
+    }
+    .last-updated {
+      text-align: center;
+      color: #666;
+      font-size: 0.9em;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Wordle Start Word of the Day</h1>
-        <div class="loading" id="loading">Loading...</div>
-        <div id="results"></div>
-        <div class="last-updated" id="lastUpdated"></div>
-    </div>
+  <div class="container">
+    <h1>Wordle Start Word of the Day</h1>
+    <div class="loading" id="loading">Loading...</div>
+    <div id="results"></div>
+    <div class="last-updated" id="lastUpdated"></div>
+  </div>
 
-    <script>
-        // WordleOptimizer Class - structured to mirror the Ruby implementation
-        class WordleOptimizer {
-            constructor() {
-                // Constants
-                this.LETTER_FREQUENCIES = {
-                    'e': 12.7, 't': 9.1, 'a': 8.2, 'o': 7.5, 'i': 7.0, 'n': 6.7,
-                    's': 6.3, 'h': 6.1, 'r': 6.0, 'd': 4.3, 'l': 4.0, 'c': 2.8,
-                    'u': 2.8, 'm': 2.4, 'w': 2.4, 'f': 2.2, 'g': 2.0, 'y': 2.0,
-                    'p': 1.9, 'b': 1.5, 'v': 1.0, 'k': 0.8, 'j': 0.15, 'x': 0.15,
-                    'q': 0.10, 'z': 0.07
-                };
+  <script>
+    // WordleOptimizer Class - structured to mirror the Ruby implementation
+    class WordleOptimizer {
+      constructor() {
+        // Constants
+        this.LETTER_FREQUENCIES = {
+          'e': 12.7, 't': 9.1, 'a': 8.2, 'o': 7.5, 'i': 7.0, 'n': 6.7,
+          's': 6.3, 'h': 6.1, 'r': 6.0, 'd': 4.3, 'l': 4.0, 'c': 2.8,
+          'u': 2.8, 'm': 2.4, 'w': 2.4, 'f': 2.2, 'g': 2.0, 'y': 2.0,
+          'p': 1.9, 'b': 1.5, 'v': 1.0, 'k': 0.8, 'j': 0.15, 'x': 0.15,
+          'q': 0.10, 'z': 0.07
+        };
 
-                // Word pools
-                this.usedWordPool = `rough\nhabit\nidiom\nquash\npolar\nsport\ndrone\ngrift\nsuede\nshuck
+        // Word pools
+        this.usedWordPool = `rough\nhabit\nidiom\nquash\npolar\nsport\ndrone\ngrift\nsuede\nshuck
 folio\nalarm\nborne\npitch\nlivid\ngrown\nfifth\neager\nbongo\naware\nbicep\ndowel\nyeast\ntripe\nbalmy\nmacho\nsuite
 shush\ntrout\npatsy\nwhose\nadept\nidler\nbliss\ndummy\nweedy\nclash\nknown\ngenie\nozone\nartsy\nspate\npatch\ninbox
 dirge\nstood\nmoral\nashen\ncrest\nlaugh\nnurse\narrow\nturbo\nwheat\nspare\nhazel\nvilla\nfoamy\nkrill\nshear\ncurse
@@ -192,7 +192,7 @@ outdo\ntrawl\nwhelp\nunfed\npaper\nstaff\ncroak\nhelix\nfloss\npride\nbatty\nrea
 fresh\ndeath\nmajor\nfeign\nabate\nbench\nquiet\ngrade\nstink\nkarma\nmodel\ndwarf\nheath\nserve\nnaval\nevade\nfocal
 blush\nawake\nhumph\nsissy\nrebut\ncigar`.split('\n');
 
-                this.originalUnusedWordlePool = `soare\nroate\nsalet\ncarte\ncaret\npooch\nhippy\ngulch\ngodly\nfleet
+        this.originalUnusedWordlePool = `soare\nroate\nsalet\ncarte\ncaret\npooch\nhippy\ngulch\ngodly\nfleet
 grave\nshock\nvalve\nclaim\nquasi\narise\nopium\nstuck\nrecut\nplume\nrifle\nincur\nwrest\nmocha\nsafer\nmound\npagan
 blast\nmelee\nlefty\npaste\ngroan\nloose\nsadly\nspilt\nslack\nsheen\neerie\nminty\nslick\nderby\nwharf\nsinge\nspawn
 fairy\nfilmy\nstack\nniece\nwoozy\nstank\ndiode\nvalor\nmuddy\nreply\nspoil\narson\nsleet\ncouch\npalsy\nbowel\ncreek
@@ -246,247 +246,247 @@ clump\ntonal\nbigot\nperil\nhaute\nspied\nundid\nbasal\nsteer\nloamy\nscamp\nvau
 login\nroger\nrefit\nrural\nbobby\neclat\nfella\ngaily\nharry\nhasty\nhydro\nliege\noctal\nombre\npayer\nsooth\nunset
 vomit\nfanny`.split('\n');
 
-                // Initialize state
-                this.recentPastSolutions = [];
-                this.upcomingSolutions = [];
-                this.eligibleWords = [];
-                this.scores = [];
-                this.highestDate = null;
+        // Initialize state
+        this.recentPastSolutions = [];
+        this.upcomingSolutions = [];
+        this.eligibleWords = [];
+        this.scores = [];
+        this.highestDate = null;
 
-                // Initialize on construction
-                this.initialize();
-            }
+        // Initialize on construction
+        this.initialize();
+      }
 
-            // Main method to run the optimizer
-            async run(showTop100 = false) {
-                await this.downloadFutureSolutions();
-                this.filterEligibleWords();
-                this.scoreWords();
-                this.displayResults(showTop100);
-            }
+      // Main method to run the optimizer
+      async run(showTop100 = false) {
+        await this.downloadFutureSolutions();
+        this.filterEligibleWords();
+        this.scoreWords();
+        this.displayResults(showTop100);
+      }
 
-            // Initialize by loading solutions from localStorage
-            initialize() {
-                const lastDate = localStorage.getItem('lastSolutionDate');
-                if (lastDate) {
-                    this.highestDate = lastDate;
-                    document.getElementById('lastUpdated').textContent = `Last updated: ${this.highestDate}`;
+      // Initialize by loading solutions from localStorage
+      initialize() {
+        const lastDate = localStorage.getItem('lastSolutionDate');
+        if (lastDate) {
+          this.highestDate = lastDate;
+          document.getElementById('lastUpdated').textContent = `Last updated: ${this.highestDate}`;
 
-                    this.loadSolutionsFromLocalStorage();
-                    this.categorizeSolutions();
-                }
-
-                // Run automatically on page load with appropriate mode
-                const urlParams = new URLSearchParams(window.location.search);
-                const showTop100 = urlParams.has('100');
-                this.run(showTop100);
-            }
-
-            // Load all solutions from localStorage
-            loadSolutionsFromLocalStorage() {
-                const startDate = new Date('2025-06-01');
-                const endDate = new Date(this.highestDate);
-                const allSolutions = [];
-
-                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                    const dateStr = d.toISOString().split('T')[0];
-                    const solution = localStorage.getItem(`solution_${dateStr}`);
-                    if (solution) {
-                        allSolutions.push({ date: dateStr, solution });
-                    }
-                }
-
-                return allSolutions;
-            }
-
-            // Categorize solutions into past and upcoming
-            categorizeSolutions() {
-                const today = new Date();
-                const allSolutions = this.loadSolutionsFromLocalStorage();
-
-                this.recentPastSolutions = allSolutions
-                    .filter(item => new Date(item.date) < today)
-                    .map(item => item.solution);
-
-                this.upcomingSolutions = allSolutions
-                    .filter(item => new Date(item.date) >= today)
-                    .map(item => item.solution);
-            }
-
-            // Fetch future solutions
-            async downloadFutureSolutions() {
-                const loading = document.getElementById('loading');
-                loading.style.display = 'block';
-
-                try {
-                    const lastDate = localStorage.getItem('lastSolutionDate');
-                    let startDate = lastDate ? new Date(lastDate) : new Date('2025-06-01');
-                    const fetchedSolutions = [];
-
-                    // Fetch solutions until we hit a 404
-                    while (true) {
-                        const dateStr = startDate.toISOString().split('T')[0];
-                        const response = await fetch(`${window.location.origin}/${dateStr}`);
-
-                        if (response.status === 404) break;
-                        if (response.status !== 200) {
-                            console.error('Error fetching solution for', dateStr, response.status);
-                            alert('Error fetching solutions');
-                            break;
-                        }
-
-                        const data = await response.json();
-                        fetchedSolutions.push({ date: dateStr, solution: data.solution });
-                        this.highestDate = dateStr;
-
-                        // Store in localStorage
-                        localStorage.setItem(`solution_${dateStr}`, data.solution);
-                        localStorage.setItem('lastSolutionDate', dateStr);
-
-                        startDate.setDate(startDate.getDate() + 1);
-                    }
-
-                    document.getElementById('lastUpdated').textContent = `Optimized through ${this.highestDate}`;
-
-                    // Re-categorize solutions with newly fetched data
-                    this.categorizeSolutions();
-
-                } catch (error) {
-                    console.error('Error fetching solutions:', error);
-                } finally {
-                    loading.style.display = 'none';
-                }
-            }
-
-            // Filter eligible words, excluding upcoming solutions
-            filterEligibleWords() {
-                const allWords = [...this.usedWordPool, ...this.originalUnusedWordlePool, ...this.recentPastSolutions];
-                this.eligibleWords = allWords.filter(word => !this.upcomingSolutions.includes(word));
-                // Remove duplicates to match Ruby's behavior
-                this.eligibleWords = [...new Set(this.eligibleWords)];
-            }
-
-            // Score all eligible words
-            scoreWords() {
-                this.scores = this.eligibleWords.map(word => [word, this.scoreWord(word)])
-                    .sort((a, b) => b[1] - a[1]);
-            }
-
-            // Score a single word against all upcoming solutions
-            scoreWord(word) {
-                if (this.upcomingSolutions.length === 0) {
-                    return 0; // No solutions to score against
-                }
-
-                const baseScore = this.upcomingSolutions.reduce((sum, solution) => {
-                    return sum + this.scoreAgainstSolution(word, solution);
-                }, 0) / this.upcomingSolutions.length;
-
-                // Add bonus for unique letters
-                const uniqueLettersBonus = new Set(word).size === 5 ? baseScore * 0.15 : 0;
-
-                // Add letter frequency bonus
-                const frequencyBonus = word.split('').reduce((sum, c) => sum + (this.LETTER_FREQUENCIES[c] || 0), 0) / 5;
-                const scaledFrequencyBonus = frequencyBonus * 0.05;
-
-                // Add bonus for repeated common letters
-                let repeatedLetterBonus = 0;
-                if (new Set(word).size < 5) {
-                    const letterCounts = {};
-                    for (const c of word) {
-                        letterCounts[c] = (letterCounts[c] || 0) + 1;
-                    }
-                    const repeatedLetters = Object.entries(letterCounts)
-                        .filter(([_, count]) => count > 1)
-                        .map(([letter]) => letter);
-                    repeatedLetterBonus = repeatedLetters.reduce((sum, letter) =>
-                        sum + (this.LETTER_FREQUENCIES[letter] || 0), 0) * 0.02;
-                }
-
-                return baseScore + uniqueLettersBonus + scaledFrequencyBonus + repeatedLetterBonus;
-            }
-
-            // Score a word against a single solution
-            scoreAgainstSolution(word, solution) {
-                const guess = word.split('');
-                const answer = solution.split('');
-                const guessUsed = Array(5).fill(false);
-                const answerUsed = Array(5).fill(false);
-                let greenMatches = 0;
-                let yellowMatches = 0;
-
-                // First pass: greens
-                for (let i = 0; i < 5; i++) {
-                    if (guess[i] === answer[i]) {
-                        greenMatches++;
-                        guessUsed[i] = true;
-                        answerUsed[i] = true;
-                    }
-                }
-
-                // Second pass: yellows
-                for (let i = 0; i < 5; i++) {
-                    if (guessUsed[i]) continue;
-                    for (let j = 0; j < 5; j++) {
-                        if (answerUsed[j]) continue;
-                        if (guess[i] === answer[j]) {
-                            yellowMatches++;
-                            guessUsed[i] = true;
-                            answerUsed[j] = true;
-                            break;
-                        }
-                    }
-                }
-
-                return greenMatches * 3 + yellowMatches;
-            }
-
-            // Display results
-            displayResults(showTop100 = false) {
-                const resultsDiv = document.getElementById('results');
-                resultsDiv.innerHTML = '';
-
-                const wordList = document.createElement('div');
-                wordList.className = 'word-list';
-
-                if (showTop100) {
-                    this.scores.slice(0, 100).forEach(([word, score], i) => {
-                        const wordItem = document.createElement('div');
-                        wordItem.className = 'word-item';
-                        wordItem.textContent = `${i + 1}. ${word.toUpperCase()} (${score.toFixed(5)})`;
-                        wordList.appendChild(wordItem);
-                    });
-                } else {
-                    const [topWord, topScore] = this.scores[0];
-                    const wordItem = document.createElement('div');
-                    wordItem.className = 'word-item-line';
-                    wordItem.textContent = `1. ${topWord.toUpperCase()}`;
-                    wordList.appendChild(wordItem);
-
-                    // Find next best word with no shared letters
-                    const topWordChars = new Set(topWord);
-                    const nextWord = this.scores.slice(1).find(([word]) =>
-                        !word.split('').some(c => topWordChars.has(c))
-                    );
-
-                    if (nextWord) {
-                        const explainer = document.createElement('div');
-                        explainer.className = 'explainer-line';
-                        explainer.textContent = "This second word has no letters in common with the first word."
-                        wordList.appendChild(explainer)
-                        const nextWordItem = document.createElement('div');
-                        nextWordItem.className = 'word-item-line';
-                        nextWordItem.textContent = `2. ${nextWord[0].toUpperCase()}`;
-                        wordList.appendChild(nextWordItem);
-                    }
-                }
-
-                resultsDiv.appendChild(wordList);
-            }
+          this.loadSolutionsFromLocalStorage();
+          this.categorizeSolutions();
         }
 
-        // Create instance and initialize
-        const wordleOptimizer = new WordleOptimizer();
-    </script>
+        // Run automatically on page load with appropriate mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const showTop100 = urlParams.has('100');
+        this.run(showTop100);
+      }
+
+      // Load all solutions from localStorage
+      loadSolutionsFromLocalStorage() {
+        const startDate = new Date('2025-06-01');
+        const endDate = new Date(this.highestDate);
+        const allSolutions = [];
+
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          const solution = localStorage.getItem(`solution_${dateStr}`);
+          if (solution) {
+            allSolutions.push({ date: dateStr, solution });
+          }
+        }
+
+        return allSolutions;
+      }
+
+      // Categorize solutions into past and upcoming
+      categorizeSolutions() {
+        const today = new Date();
+        const allSolutions = this.loadSolutionsFromLocalStorage();
+
+        this.recentPastSolutions = allSolutions
+          .filter(item => new Date(item.date) < today)
+          .map(item => item.solution);
+
+        this.upcomingSolutions = allSolutions
+          .filter(item => new Date(item.date) >= today)
+          .map(item => item.solution);
+      }
+
+      // Fetch future solutions
+      async downloadFutureSolutions() {
+        const loading = document.getElementById('loading');
+        loading.style.display = 'block';
+
+        try {
+          const lastDate = localStorage.getItem('lastSolutionDate');
+          let startDate = lastDate ? new Date(lastDate) : new Date('2025-06-01');
+          const fetchedSolutions = [];
+
+          // Fetch solutions until we hit a 404
+          while (true) {
+            const dateStr = startDate.toISOString().split('T')[0];
+            const response = await fetch(`${window.location.origin}/${dateStr}`);
+
+            if (response.status === 404) break;
+            if (response.status !== 200) {
+              console.error('Error fetching solution for', dateStr, response.status);
+              alert('Error fetching solutions');
+              break;
+            }
+
+            const data = await response.json();
+            fetchedSolutions.push({ date: dateStr, solution: data.solution });
+            this.highestDate = dateStr;
+
+            // Store in localStorage
+            localStorage.setItem(`solution_${dateStr}`, data.solution);
+            localStorage.setItem('lastSolutionDate', dateStr);
+
+            startDate.setDate(startDate.getDate() + 1);
+          }
+
+          document.getElementById('lastUpdated').textContent = `Optimized through ${this.highestDate}`;
+
+          // Re-categorize solutions with newly fetched data
+          this.categorizeSolutions();
+
+        } catch (error) {
+          console.error('Error fetching solutions:', error);
+        } finally {
+          loading.style.display = 'none';
+        }
+      }
+
+      // Filter eligible words, excluding upcoming solutions
+      filterEligibleWords() {
+        const allWords = [...this.usedWordPool, ...this.originalUnusedWordlePool, ...this.recentPastSolutions];
+        this.eligibleWords = allWords.filter(word => !this.upcomingSolutions.includes(word));
+        // Remove duplicates to match Ruby's behavior
+        this.eligibleWords = [...new Set(this.eligibleWords)];
+      }
+
+      // Score all eligible words
+      scoreWords() {
+        this.scores = this.eligibleWords.map(word => [word, this.scoreWord(word)])
+          .sort((a, b) => b[1] - a[1]);
+      }
+
+      // Score a single word against all upcoming solutions
+      scoreWord(word) {
+        if (this.upcomingSolutions.length === 0) {
+          return 0; // No solutions to score against
+        }
+
+        const baseScore = this.upcomingSolutions.reduce((sum, solution) => {
+          return sum + this.scoreAgainstSolution(word, solution);
+        }, 0) / this.upcomingSolutions.length;
+
+        // Add bonus for unique letters
+        const uniqueLettersBonus = new Set(word).size === 5 ? baseScore * 0.15 : 0;
+
+        // Add letter frequency bonus
+        const frequencyBonus = word.split('').reduce((sum, c) => sum + (this.LETTER_FREQUENCIES[c] || 0), 0) / 5;
+        const scaledFrequencyBonus = frequencyBonus * 0.05;
+
+        // Add bonus for repeated common letters
+        let repeatedLetterBonus = 0;
+        if (new Set(word).size < 5) {
+          const letterCounts = {};
+          for (const c of word) {
+            letterCounts[c] = (letterCounts[c] || 0) + 1;
+          }
+          const repeatedLetters = Object.entries(letterCounts)
+            .filter(([_, count]) => count > 1)
+            .map(([letter]) => letter);
+          repeatedLetterBonus = repeatedLetters.reduce((sum, letter) =>
+            sum + (this.LETTER_FREQUENCIES[letter] || 0), 0) * 0.02;
+        }
+
+        return baseScore + uniqueLettersBonus + scaledFrequencyBonus + repeatedLetterBonus;
+      }
+
+      // Score a word against a single solution
+      scoreAgainstSolution(word, solution) {
+        const guess = word.split('');
+        const answer = solution.split('');
+        const guessUsed = Array(5).fill(false);
+        const answerUsed = Array(5).fill(false);
+        let greenMatches = 0;
+        let yellowMatches = 0;
+
+        // First pass: greens
+        for (let i = 0; i < 5; i++) {
+          if (guess[i] === answer[i]) {
+            greenMatches++;
+            guessUsed[i] = true;
+            answerUsed[i] = true;
+          }
+        }
+
+        // Second pass: yellows
+        for (let i = 0; i < 5; i++) {
+          if (guessUsed[i]) continue;
+          for (let j = 0; j < 5; j++) {
+            if (answerUsed[j]) continue;
+            if (guess[i] === answer[j]) {
+              yellowMatches++;
+              guessUsed[i] = true;
+              answerUsed[j] = true;
+              break;
+            }
+          }
+        }
+
+        return greenMatches * 3 + yellowMatches;
+      }
+
+      // Display results
+      displayResults(showTop100 = false) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+
+        const wordList = document.createElement('div');
+        wordList.className = 'word-list';
+
+        if (showTop100) {
+          this.scores.slice(0, 100).forEach(([word, score], i) => {
+            const wordItem = document.createElement('div');
+            wordItem.className = 'word-item';
+            wordItem.textContent = `${i + 1}. ${word.toUpperCase()} (${score.toFixed(5)})`;
+            wordList.appendChild(wordItem);
+          });
+        } else {
+          const [topWord, topScore] = this.scores[0];
+          const wordItem = document.createElement('div');
+          wordItem.className = 'word-item-line';
+          wordItem.textContent = `1. ${topWord.toUpperCase()}`;
+          wordList.appendChild(wordItem);
+
+          // Find next best word with no shared letters
+          const topWordChars = new Set(topWord);
+          const nextWord = this.scores.slice(1).find(([word]) =>
+            !word.split('').some(c => topWordChars.has(c))
+          );
+
+          if (nextWord) {
+            const explainer = document.createElement('div');
+            explainer.className = 'explainer-line';
+            explainer.textContent = "This second word has no letters in common with the first word."
+            wordList.appendChild(explainer)
+            const nextWordItem = document.createElement('div');
+            nextWordItem.className = 'word-item-line';
+            nextWordItem.textContent = `2. ${nextWord[0].toUpperCase()}`;
+            wordList.appendChild(nextWordItem);
+          }
+        }
+
+        resultsDiv.appendChild(wordList);
+      }
+    }
+
+    // Create instance and initialize
+    const wordleOptimizer = new WordleOptimizer();
+  </script>
 </body>
 </html>
