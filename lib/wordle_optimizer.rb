@@ -67,8 +67,8 @@ class WordleOptimizer
   end
 
   def filter_eligible_words
-    @eligible_words = @original_unused_wordle_pool + @used_word_pool
-    @eligible_words -= recent_solutions # avoid win in 1
+    @eligible_words = @used_word_pool + recent_past_solutions + @original_unused_wordle_pool
+    @eligible_words -= upcoming_solutions # avoid win in 1
   end
 
   def score_words
@@ -78,7 +78,7 @@ class WordleOptimizer
   end
 
   def score_word(word)
-    base_score = recent_solutions.sum do |solution|
+    base_score = upcoming_solutions.sum do |solution|
       score_against_solution(word, solution)
     end.to_f / upcoming_solutions.length
 
@@ -94,8 +94,20 @@ class WordleOptimizer
     base_score + unique_letters_bonus + frequency_bonus
   end
 
-  def recent_solutions
-    @recent_solutions ||= Dir.glob(File.join(@solutions_dir, '*.json')).map do |file|
+  def recent_past_solutions
+    @recent_past_solutions ||= Dir.glob(File.join(@solutions_dir, '*.json')).select do |file|
+      date = Date.parse(File.basename(file, '.json'))
+      date < Date.today
+    end.map do |file|
+      JSON.parse(File.read(file))['solution']
+    end
+  end
+
+  def upcoming_solutions
+    @upcoming_solutions ||= Dir.glob(File.join(@solutions_dir, '*.json')).select do |file|
+      date = Date.parse(File.basename(file, '.json'))
+      date >= Date.today
+    end.map do |file|
       JSON.parse(File.read(file))['solution']
     end
   end
