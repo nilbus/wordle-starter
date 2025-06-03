@@ -35,7 +35,7 @@ class WordleOptimizer
   end
 
   def download_future_solutions
-    date = most_recent_solution_date || Date.today - 1
+    date = most_recent_solution_date || Date.new(2025, 6, 1) # most recent in used-up-to-2025-06-01.txt
     loop do
       date += 1
       solution = fetch_solution(date)
