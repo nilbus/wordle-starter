@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Optimizer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #1a1a1a;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .word-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .word-item {
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        .last-updated {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wordle Optimizer</h1>
+        <div class="controls">
+            <button onclick="optimizeWords()">Find Best Words</button>
+            <button onclick="showTop100()">Show Top 100</button>
+        </div>
+        <div class="loading" id="loading">Loading...</div>
+        <div id="results"></div>
+        <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+    <script>
+        const LETTER_FREQUENCIES = {
+            'e': 12.7, 't': 9.1, 'a': 8.2, 'o': 7.5, 'i': 7.0, 'n': 6.7,
+            's': 6.3, 'h': 6.1, 'r': 6.0, 'd': 4.3, 'l': 4.0, 'c': 2.8,
+            'u': 2.8, 'm': 2.4, 'w': 2.4, 'f': 2.2, 'g': 2.0, 'y': 2.0,
+            'p': 1.9, 'b': 1.5, 'v': 1.0, 'k': 0.8, 'j': 0.15, 'x': 0.15,
+            'q': 0.10, 'z': 0.07
+        };
+
+        const usedWords = `preen\nrough\nhabit\nidiom\nquash\npolar\nsport\ndrone\ngrift\nsuede\nshuck\nfolio\nalarm
+borne\npitch\nlivid\ngrown\nfifth\neager\nbongo\naware\nbicep\ndowel\nyeast\ntripe\nbalmy\nmacho\nsuite\nshush\ntrout
+patsy\nwhose\nadept\nidler\nbliss\ndummy\nweedy\nclash\nknown\ngenie\nozone\nartsy\nspate\npatch\ninbox\ndirge\nstood
+moral\nashen\ncrest\nlaugh\nnurse\narrow\nturbo\nwheat\nspare\nhazel\nvilla\nfoamy\nkrill\nshear\ncurse\njewel\nbooty
+quota\nsorry\nverse\nsheet\nelbow\nshelf\nangle\ndopey\namble\nnudge\nbaste\nspark\ntimer\nlasso\nstamp\nladle\npiece
+chase\nmango\ntrack\nspite\ngreed\nnavel\ntroop\nalert\nscrum\ncheck\nspear\ndeity\nhover\nfuzzy\nlodge\naward\ndryer
+gland\notter\ncream\nclove\nroach\nmadly\nindie\ntrail\nsuave\ncrook\nditty\nrumba\nrapid\nscore\ngoody\nbonus\nsteep
+swath\npupil\npedal\ntooth\nrevue\nchore\nrivet\ntoast\nfalse\nudder\nfever\nshunt\nsunny\ncrisp\ncrepe\nupper\nreach
+icing\nsquid\nrower\nsilly\nprose\nflint\nknack\nfancy\ncloak\ntotal\ndingy\ncrawl\nwafer\ndraft\natlas\nsprig\ncyber
+relax\ncheap\nchose\nnerve\nlemur\nstare\nmambo\ndecry\ngrain\naffix\nshare\neagle\nsauna\nbrawn\nblade\nflash\nstray
+hefty\nscowl\nboast\nfunky\ndrool\nboxer\nvying\nplumb\npatio\nflung\nhyena\nhilly\nshove\nendow\ncrypt\nshaky\nguile
+mauve\ndogma\nhippo\nchock\nslang\nwitch\nbrown\ntwist\njelly\npearl\nspine\nniche\ngoing\nfrail\ntally\nvisor\ntacky
+uvula\nprimp\nflown\nstoic\ninner\nswell\nready\nevent\ntruly\noctet\nvinyl\nblaze\nsnoop\nsixth\nweird\neasel\ntunic
+bawdy\nsandy\nwreak\nfrown\nbossy\ngoofy\nshout\nspoon\ndicey\nfiber\nstint\nhalve\ngrant\ncorer\ngamut\nprone\nstain
+gusty\ncarve\nmommy\njoint\nflour\nlager\nminer\ntitle\nwagon\nshell\nmodem\ncloud\nrider\nbrain\nfaith\nthank`.split('\n');
+        const unusedWords = `soare\nroate\nraise\nsalet\nstare\nslate\ntrace\ncarte\ncrate\ncrane\ncaret\nstale\npooch
+hippy\ngulch\ngodly\nfleet\ngrave\nshock\nvalve\nclaim\nquasi\narise\nopium\nstuck\nrecut\nplume\nrifle\nincur\nwrest
+mocha\nsafer\nmound\npagan\nblast\nmelee\nlefty\npaste\ngroan\nloose\nsadly\nspilt\nslack\nsheen\neerie\nminty\nslick
+derby\nwharf\nsinge\nspawn\nfairy\nfilmy\nstack\nniece\nwoozy\nstank\ndiode\nvalor\nmuddy\nreply\nspoil\narson\nsleet
+couch\npalsy\nbowel\ncreek\nlance\nidiot\nsiren\nembed\ndross\nannul\nladen\nelite\nlymph\nedify\nmight\nreset\nvisit
+gusto\npurse\nvapor\ncrock\nloath\nchaff\nslide\nqueer\naping\npushy\ntamer\nawoke\nswift\nexile\nfreer\nrisky\nghost
+plier\nwinch\nlurch\nsavvy\npried\nchump\ncress\neater\ncycle\nkitty\nboule\nmoron\ntenet\nlobby\nplush\nvigil\nblink
+clung\ncroup\nclink\njuicy\nflier\nchina\nvowel\ngnome\nsnuck\nspiny\nrigor\nrabid\npoppy\nbudge\nmoldy\ndowdy\ncaddy
+quell\ndumpy\npaler\nswore\nrebar\nscuba\nhorny\namply\novary\ncliff\ntruce\nfritz\nllama\neaten\nhovel\nrehab\nsigma
+dying\nfetid\nscion\ngayly\nmusky\ndally\nbless\nruler\nfluid\ntatty\ncutie\nbluer\naider\nshook\nriver\nprivy\nbetel
+frisk\nbegun\nweave\nwryly\nassay\nbloom\nlater\nsilky\nwreck\nsmack\namaze\ncivil\nvista\nbeech\njetty\nvocal\neight
+diver\nposer\nalley\ncreed\nanime\nbosom\ndunce\npudgy\nwaive\noutgo\nbilge\nideal\nclasp\nseize\nhotly\nsieve\ngrape
+noose\nhardy\nshied\ndrawl\nputty\nstrut\nburnt\ntulip\ncrick\nidyll\nvixen\nfuror\ngeeky\ncough\nshoal\nstork\naunty
+furry\nrazor\nelect\nevict\nimply\ndemur\nhaven\ncavil\nswear\ncrump\ndough\ngavel\nsalon\nharem\nsworn\ncabin\nminor
+fatty\nhusky\nslime\nglint\ntread\nsteal\nmurky\nspore\nhoist\nbuxom\ndimly\nlevel\nsumac\nstilt\narena\nslimy`.split('\n');
+
+        let solutions = [];
+        let highestDate = null;
+
+        async function fetchSolutions() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+
+            try {
+                // Get the last stored date from localStorage
+                const lastDate = localStorage.getItem('lastSolutionDate');
+                let startDate = lastDate ? new Date(lastDate) : new Date('2025-01-01');
+
+                // Clear existing solutions
+                solutions = [];
+
+                // Fetch solutions until we hit a 404
+                while (true) {
+                    const dateStr = startDate.toISOString().split('T')[0];
+                    const response = await fetch(`https://nilbus.com/wordle/${dateStr}`);
+
+                    if (response.status === 404) break;
+
+                    const data = await response.json();
+                    solutions.push(data.solution);
+                    highestDate = dateStr;
+
+                    // Store in localStorage
+                    localStorage.setItem(`solution_${dateStr}`, data.solution);
+                    localStorage.setItem('lastSolutionDate', dateStr);
+
+                    startDate.setDate(startDate.getDate() + 1);
+                }
+
+                // Update last updated text
+                document.getElementById('lastUpdated').textContent =
+                    `Last updated: ${highestDate}`;
+
+            } catch (error) {
+                console.error('Error fetching solutions:', error);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function scoreWord(word) {
+            let baseScore = 0;
+
+            for (const solution of solutions) {
+                const guess = word.split('');
+                const answer = solution.split('');
+                const guessUsed = Array(5).fill(false);
+                const answerUsed = Array(5).fill(false);
+                let greenMatches = 0;
+                let yellowMatches = 0;
+
+                // First pass: greens
+                for (let i = 0; i < 5; i++) {
+                    if (guess[i] === answer[i]) {
+                        greenMatches++;
+                        guessUsed[i] = true;
+                        answerUsed[i] = true;
+                    }
+                }
+
+                // Second pass: yellows
+                for (let i = 0; i < 5; i++) {
+                    if (guessUsed[i]) continue;
+                    for (let j = 0; j < 5; j++) {
+                        if (answerUsed[j]) continue;
+                        if (guess[i] === answer[j]) {
+                            yellowMatches++;
+                            guessUsed[i] = true;
+                            answerUsed[j] = true;
+                            break;
+                        }
+                    }
+                }
+
+                baseScore += greenMatches * 3 + yellowMatches;
+            }
+
+            // Add bonus for unique letters (15% bonus)
+            const uniqueLettersBonus = new Set(word).size === 5 ? baseScore * 0.15 : 0;
+
+            // Add letter frequency bonus
+            const frequencyBonus = word.split('').reduce((sum, c) => sum + (LETTER_FREQUENCIES[c] || 0), 0) / 5;
+            const scaledFrequencyBonus = frequencyBonus * 0.05;
+
+            // Add bonus for repeated common letters
+            let repeatedLetterBonus = 0;
+            if (new Set(word).size < 5) {
+                const letterCounts = {};
+                for (const c of word) {
+                    letterCounts[c] = (letterCounts[c] || 0) + 1;
+                }
+                const repeatedLetters = Object.entries(letterCounts)
+                    .filter(([_, count]) => count > 1)
+                    .map(([letter]) => letter);
+                repeatedLetterBonus = repeatedLetters.reduce((sum, letter) =>
+                    sum + (LETTER_FREQUENCIES[letter] || 0), 0) * 0.02;
+            }
+
+            return baseScore + uniqueLettersBonus + scaledFrequencyBonus + repeatedLetterBonus;
+        }
+
+        function filterEligibleWords() {
+            return unusedWords.filter(word => !usedWords.includes(word) && !solutions.includes(word));
+        }
+
+        function displayResults(words, showTop100 = false) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (showTop100) {
+                const title = document.createElement('h2');
+                title.textContent = 'Top 100 Optimal Starting Words';
+                resultsDiv.appendChild(title);
+            } else {
+                const title = document.createElement('h2');
+                title.textContent = 'Optimal Starting Word Pair';
+                resultsDiv.appendChild(title);
+            }
+
+            const wordList = document.createElement('div');
+            wordList.className = 'word-list';
+
+            if (showTop100) {
+                words.slice(0, 100).forEach(([word, score], i) => {
+                    const wordItem = document.createElement('div');
+                    wordItem.className = 'word-item';
+                    wordItem.textContent = `${i + 1}. ${word.toUpperCase()} (${score.toFixed(1)})`;
+                    wordList.appendChild(wordItem);
+                });
+            } else {
+                const [topWord, topScore] = words[0];
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.textContent = `1. ${topWord.toUpperCase()} (${topScore.toFixed(1)})`;
+                wordList.appendChild(wordItem);
+
+                // Find next best word with no shared letters
+                const topWordChars = new Set(topWord);
+                const nextWord = words.slice(1).find(([word]) =>
+                    !word.split('').some(c => topWordChars.has(c))
+                );
+
+                if (nextWord) {
+                    const nextWordItem = document.createElement('div');
+                    nextWordItem.className = 'word-item';
+                    nextWordItem.textContent = `2. ${nextWord[0].toUpperCase()} (${nextWord[1].toFixed(1)})`;
+                    wordList.appendChild(nextWordItem);
+                }
+            }
+
+            resultsDiv.appendChild(wordList);
+        }
+
+        async function optimizeWords() {
+            await fetchSolutions();
+            const eligibleWords = filterEligibleWords();
+            const scoredWords = eligibleWords.map(word => [word, scoreWord(word)])
+                .sort((a, b) => b[1] - a[1]);
+            displayResults(scoredWords);
+        }
+
+        function showTop100() {
+            const eligibleWords = filterEligibleWords();
+            const scoredWords = eligibleWords.map(word => [word, scoreWord(word)])
+                .sort((a, b) => b[1] - a[1]);
+            displayResults(scoredWords, true);
+        }
+
+        // Initialize by loading solutions from localStorage
+        function initialize() {
+            const lastDate = localStorage.getItem('lastSolutionDate');
+            if (lastDate) {
+                highestDate = lastDate;
+                document.getElementById('lastUpdated').textContent =
+                    `Last updated: ${highestDate}`;
+
+                // Load solutions from localStorage
+                const startDate = new Date('2024-01-01');
+                const endDate = new Date(lastDate);
+
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    const solution = localStorage.getItem(`solution_${dateStr}`);
+                    if (solution) {
+                        solutions.push(solution);
+                    }
+                }
+            }
+        }
+
+        // Initialize on page load
+        initialize();
+    </script>
+</body>
+</html>
