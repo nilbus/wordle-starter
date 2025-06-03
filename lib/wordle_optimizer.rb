@@ -82,16 +82,23 @@ class WordleOptimizer
       score_against_solution(word, solution)
     end.to_f / upcoming_solutions.length
 
-    # Add a bonus for words with unique letters
-    # The bonus is 10% of the base score if all letters are unique
-    unique_letters_bonus = word.chars.uniq.length == 5 ? base_score * 0.1 : 0
+    # Add a bonus for words with all unique letters
+    unique_letters_bonus = word.chars.uniq.length == 5 ? base_score * 0.15 : 0
 
     # Add letter frequency bonus (smaller than the unique letters bonus to maintain primary scoring)
     # We use the average frequency of the letters in the word
     frequency_bonus = word.chars.map { |c| LETTER_FREQUENCIES[c] || 0 }.sum / 5.0
     frequency_bonus = frequency_bonus * 0.05  # Scale down to 5% of the frequency score
 
-    base_score + unique_letters_bonus + frequency_bonus
+    # Add bonus for repeated common letters (like E in TEASE)
+    # This rewards words that repeat high-frequency letters
+    repeated_letter_bonus = 0
+    if word.chars.uniq.length < 5
+      repeated_letters = word.chars.group_by(&:itself).select { |_, v| v.length > 1 }.keys
+      repeated_letter_bonus = repeated_letters.sum { |letter| LETTER_FREQUENCIES[letter] || 0 } * 0.02
+    end
+
+    base_score + unique_letters_bonus + frequency_bonus + repeated_letter_bonus
   end
 
   def recent_past_solutions
