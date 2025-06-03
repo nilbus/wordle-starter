@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Optimizer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #1a1a1a;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .word-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .word-item {
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        .last-updated {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wordle Optimizer</h1>
+        <div class="controls">
+            <button onclick="wordleOptimizer.run(false)">Find Best Words</button>
+            <button onclick="wordleOptimizer.run(true)">Show Top 100</button>
+        </div>
+        <div class="loading" id="loading">Loading...</div>
+        <div id="results"></div>
+        <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+    <script>
+        // WordleOptimizer Class - structured to mirror the Ruby implementation
+        class WordleOptimizer {
+            constructor() {
+                // Constants
+                this.LETTER_FREQUENCIES = {
+                    'e': 12.7, 't': 9.1, 'a': 8.2, 'o': 7.5, 'i': 7.0, 'n': 6.7,
+                    's': 6.3, 'h': 6.1, 'r': 6.0, 'd': 4.3, 'l': 4.0, 'c': 2.8,
+                    'u': 2.8, 'm': 2.4, 'w': 2.4, 'f': 2.2, 'g': 2.0, 'y': 2.0,
+                    'p': 1.9, 'b': 1.5, 'v': 1.0, 'k': 0.8, 'j': 0.15, 'x': 0.15,
+                    'q': 0.10, 'z': 0.07
+                };
+
+                // Word pools
+                this.usedWordPool = `rough\nhabit\nidiom\nquash\npolar\nsport\ndrone\ngrift\nsuede\nshuck
+folio\nalarm\nborne\npitch\nlivid\ngrown\nfifth\neager\nbongo\naware\nbicep\ndowel\nyeast\ntripe\nbalmy\nmacho\nsuite
+shush\ntrout\npatsy\nwhose\nadept\nidler\nbliss\ndummy\nweedy\nclash\nknown\ngenie\nozone\nartsy\nspate\npatch\ninbox
+dirge\nstood\nmoral\nashen\ncrest\nlaugh\nnurse\narrow\nturbo\nwheat\nspare\nhazel\nvilla\nfoamy\nkrill\nshear\ncurse
+jewel\nbooty\nquota\nsorry\nverse\nsheet\nelbow\nshelf\nangle\ndopey\namble\nnudge\nbaste\nspark\ntimer\nlasso\nstamp
+ladle\npiece\nchase\nmango\ntrack\nspite\ngreed\nnavel\ntroop\nalert\nscrum\ncheck\nspear\ndeity\nhover\nfuzzy\nlodge
+award\ndryer\ngland\notter\ncream\nclove\nroach\nmadly\nindie\ntrail\nsuave\ncrook\nditty\nrumba\nrapid\nscore\ngoody
+bonus\nsteep\nswath\npupil\npedal\ntooth\nrevue\nchore\nrivet\ntoast\nfalse\nudder\nfever\nshunt\nsunny\ncrisp\ncrepe
+upper\nreach\nicing\nsquid\nrower\nsilly\nprose\nflint\nknack\nfancy\ncloak\ntotal\ndingy\ncrawl\nwafer\ndraft\natlas
+sprig\ncyber\nrelax\ncheap\nchose\nnerve\nlemur\nstare\nmambo\ndecry\ngrain\naffix\nshare\neagle\nsauna\nbrawn\nblade
+flash\nstray\nhefty\nscowl\nboast\nfunky\ndrool\nboxer\nvying\nplumb\npatio\nflung\nhyena\nhilly\nshove\nendow\ncrypt
+shaky\nguile\nmauve\ndogma\nhippo\nchock\nslang\nwitch\nbrown\ntwist\njelly\npearl\nspine\nniche\ngoing\nfrail\ntally
+visor\ntacky\nuvula\nprimp\nflown\nstoic\ninner\nswell\nready\nevent\ntruly\noctet\nvinyl\nblaze\nsnoop\nsixth\nweird
+easel\ntunic\nbawdy\nsandy\nwreak\nfrown\nbossy\ngoofy\nshout\nspoon\ndicey\nfiber\nstint\nhalve\ngrant\ncorer\ngamut
+prone\nstain\ngusty\ncarve\nmommy\njoint\nflour\nlager\nminer\ntitle\nwagon\nshell\nmodem\ncloud\nrider\nbrain\nfaith
+thank\ntorch\nhandy\nsteam\nteach\nseven\nsmoke\npress\nfully\nbeaut\nhoney\nrecur\nbroad\nharsh\nbrass\naisle\nrebel
+debit\ndrawn\nowner\nrerun\nwiden\nstern\nfaint\ncamel\nmushy\nspout\nknave\nflunk\nlithe\ncrown\nstake\nskate\nfilet
+leech\nbrute\nmulch\ndelay\nmeter\nlanky\nstorm\nbrace\nacorn\nshore\nneigh\nskiff\nscone\nmedic\nounce\nsaucy\nmacaw
+anvil\nensue\nlower\nscale\nflake\nchalk\npenne\nferal\nsuper\nsmock\njuice\nawash\nporch\nforte\nprong\ncadet\nspeck
+shaft\nrefer\nnerdy\nquite\ndecoy\nswoon\nvideo\nenact\njiffy\ncameo\ngaunt\nblare\nshape\ncanon\nscoff\ncrush\ndebut
+thigh\ninlay\nadage\nbuddy\nzebra\ndrove\norder\nknead\nsavor\ndolly\nbugle\nedict\npaint\nscent\nterse\ncover\nprior
+grind\nproud\nvault\nangst\ndeter\nswung\nmanga\ncrowd\nhence\nmelon\nether\norgan\ngroom\nstark\nbravo\nbasin\nchaos
+gummy\npapal\nminus\nskier\nbevel\ntitan\nglide\nswish\nexalt\ndingo\nnicer\nhitch\nbriny\ntutor\nstall\npinch\namass
+cumin\nouter\ntidal\nmedia\njerky\npious\nmusty\nshave\ndecal\nvalue\nebony\nslice\ndiary\nprowl\ncraft\nprune\ngleam
+vapid\nintro\novert\nrover\nlaser\njolly\nlucid\nraise\nfacet\ntithe\nshank\nequip\nblimp\nsteel\nwhiny\nlouse\nbroth
+merge\nbreed\nvoila\nfinch\nwrist\nclimb\nplait\nserum\nfrond\ntaboo\nforce\nrealm\nspeak\nstung\nmayor\nsally\ntowel
+risen\ndecay\nshade\nlingo\nabide\nspelt\nsnort\ntoxin\nerupt\nsince\nlocal\nheave\npesky\ngrasp\ncheer\nearly\nclone
+teary\nhunch\nflame\nstate\nurban\nforty\nimage\ndevil\nsense\noften\nsmith\npiper\napart\nheavy\nbuild\nmatch\nprice
+ridge\npsalm\nstash\nascot\ntalon\nscram\npasta\nnever\nfried\nstiff\nplace\nafter\nwhich\nrepel\nverge\nmicro\ncleft
+alive\nbulky\nexpel\nleggy\nember\nsnake\naloof\nblock\nrelic\nstill\ntweak\nnorth\nlarge\nthing\nstole\ncourt\nblond
+lunch\ndoing\nheard\nroute\nbrief\nthrew\nliner\nfinal\nstony\ncable\nlunge\nscant\ntwirl\naging\nmural\nsalty\nthree
+child\nlearn\ndaisy\nphone\nevoke\ngrace\nslope\ntouch\nbuilt\nsmall\ntable\nfunny\nbacon\nglobe\ntopic\nwould\nspent
+these\nhouse\nchain\nshift\nsharp\nsleep\nwoman\nyoung\nworst\nadapt\ngenre\ntaken\nresin\nsushi\nscope\ntawny\nsolid
+guide\nthrow\nqueen\npixel\npiano\ncandy\nqueue\nthink\ntardy\ntrust\nsight\nsassy\ngreen\nmeant\nactor\nleash\nglaze
+ninja\nlimit\ntrade\nflare\nmania\nardor\nuntil\nnoise\nbleak\ngrail\nphony\nmason\nnoble\npique\nretry\ncause\ntempo
+given\nsmirk\noccur\nsplat\nmercy\nadult\ngraph\nleaky\nagent\nuncle\nknelt\nskunk\nsnail\ntruth\nbinge\nviola\nchime
+bunch\nspurt\nwhile\nmerry\nberet\ndaddy\nazure\ncoach\nsmile\nloyal\nrocky\nright\ncarol\nbrush\nstone\nsnare\nclose
+frank\nmusic\nangel\nexert\nrayon\nclear\nwhisk\nolder\nquote\nlucky\nrouse\ndwell\ngnash\nbirch\ngiddy\nawait\nonion
+space\nbride\naudio\ncaper\nwrite\npeace\nchoir\nocean\nwordy\nverve\nspice\nbeach\nquest\nmagma\nexact\namiss\nscrub
+index\nsnaky\nwrath\nquick\nhello\nempty\nlover\nbully\nbrook\npolyp\nanode\nchart\nparty\nbeget\ntenth\nstyle\nbathe
+curly\nethos\ndisco\nheart\nwheel\nhobby\nwhale\nfroze\nburly\nflank\ntonic\nflyer\ndroop\ntopaz\ncrone\nfiend\nbarge
+whirl\nearth\nfolly\nenter\ncower\ndonut\nwindy\nvenom\nirate\nhotel\nmossy\nbleep\nstraw\ndiner\ntract\nabout\nguest
+rodeo\ngrand\ncovet\ntaste\ncrane\nfrost\nkazoo\nshyly\nranch\nstrap\nmaybe\ncrime\nplunk\nwrong\nguard\nagain\nbalsa
+crumb\nhater\nscout\nennui\nbeast\nnanny\nhumid\njazzy\nagile\nkneel\nmouse\nskimp\nramen\nswine\nbagel\nutter\nclerk
+igloo\nbrash\nflask\ngrief\nshorn\nplank\nlatte\ncanoe\nscarf\nacrid\nsnack\nbroom\nethic\ncocoa\naglow\nghoul\nanger
+below\nguppy\nhorde\nsulky\nrange\nplaza\ncedar\ncirca\nlogic\nmetro\njoker\nditto\nunzip\nbroke\nkayak\nplate\nthump
+hound\nwhiff\ndwelt\nagony\nthief\ncarat\nborax\nqualm\nunder\nsnafu\nledge\nlocus\nleafy\nsmash\nratio\nflora\nstock
+march\nevery\nbread\nbeset\nhurry\nguano\nuntie\nvoter\ngrout\nstaid\nduvet\ntough\nglove\ncredo\nyacht\nmealy\ncider
+sweep\nsurly\nblame\nbirth\nemail\nrevel\nwhere\nregal\nhorse\npinky\ntoxic\ntrend\nsquat\nabove\nmoose\npolka\nworse
+syrup\nfifty\narbor\nvague\nriper\nruddy\nsweat\nkiosk\navail\ncache\nmagic\nsalsa\nsound\nusage\ngiant\ndebug\nheady
+stage\nflail\napple\nninth\ndance\nunlit\ntasty\nshirk\nscold\ncross\ncrave\nfishy\nflirt\nworry\nbeefy\nmaize\ncount
+elude\nmatey\nblurb\nalter\nmucky\nchard\nadopt\nfrock\nspire\nkoala\nhuman\nleapt\nsedan\ngrimy\npixie\nopera\nlemon
+belie\nsleek\nlayer\nantic\nskirt\nwhine\nmanly\nmolar\nhavoc\nimpel\ncondo\njudge\nextra\npoise\naorta\nexcel\nlunar
+third\nslate\ntaper\nchord\nprobe\nrival\nusual\nspoke\napply\nnaive\nknock\nbraid\ninfer\njoust\namber\nwoken\nadore
+torso\nchafe\neject\nstudy\nundue\ntepid\nhappy\nclean\nitchy\nfeast\ndrive\nprime\naxiom\nbrave\navert\nglyph\nthere
+baker\nsnarl\nmaple\ninane\nvalet\nmedal\nunite\nrainy\nspell\nbegin\nstale\ndream\nphoto\naloud\ninept\npiney\naptly
+waltz\nlibel\nsneak\ncarry\nflout\nfoggy\nfault\nmummy\nspiel\ngrove\ndenim\nquirk\nexist\nstein\nspade\ncatch\nfloor
+equal\nionic\nvalid\nenjoy\nhowdy\nvigor\ndandy\nsloth\nmarsh\nbough\nsting\ntwine\nleave\nscorn\nscald\nusurp\nsoggy
+brisk\nadmit\ngrate\nglory\nsaint\nrecap\nalike\ntrice\nstick\nchute\nparer\ndoubt\nthyme\nalpha\nbooze\ntibia\nlofty
+theme\nclass\nleery\ntaunt\nwhoop\ninter\ngully\ncharm\nfungi\nprize\nonset\nchief\ngauze\nruder\nirony\nclown\nneedy
+woven\nmerit\nwaste\ntreat\nshrug\ntwang\ntwice\ngruel\npoker\nkhaki\nhunky\nlabel\nglean\ncling\npatty\nunfit\nsmear
+alien\nbuggy\nrhyme\nyouth\ncoyly\nquart\ncramp\nbluff\nupset\nstomp\nmotto\ncinch\nelope\npower\nmidge\ntryst\naphid
+trite\nangry\nflock\nwacky\nroomy\nwedge\nliver\nbland\nnight\nmadam\nberth\nstead\nvoice\nagape\nfluff\nfield\nsever
+lilac\negret\npinto\nhutch\ngawky\ndroll\nretro\nrusty\nbeady\nsmite\nbrink\nawful\ngloat\ninput\nloser\ncacao\nblown
+apron\nprimo\natone\ndonor\nfloat\ngoose\npiety\ngirth\ntrait\nflood\ngloom\ndepth\nfroth\nphase\nshowy\ncreak\nmanor
+atoll\nbayou\ncrept\ntiara\nasset\nvouch\nalbum\nhinge\nmoney\nscrap\ngamer\nglass\nscour\nbeing\ndelve\nyield\nmetal
+tipsy\nslung\nfarce\ngecko\nshine\ncanny\nmidst\nbadge\nhomer\ntrain\nhairy\nstory\nforgo\nlarva\ntrash\nzesty\nshown
+heist\naskew\ninert\nolive\nplant\noxide\ncargo\nfoyer\nflair\nample\ncheek\nshame\nmince\nchunk\nroyal\nsquad\nblack
+stair\nscare\nforay\ncomma\nnatal\nshawl\nfewer\ntrope\nsnout\nlowly\nstove\nshall\nfound\nnymph\nepoxy\ndepot\nchest
+purge\nslosh\ntheir\nrenew\nallow\nsaute\nmovie\ncater\ntease\nsmelt\nfocus\ntoday\nwatch\nlapse\nmonth\nsweet\nhoard
+cloth\nbrine\nahead\nmourn\nnasty\nrupee\nchoke\nchant\nspill\nvivid\nbloke\ntrove\nthorn\nother\ntacit\nswill\ndodge
+shake\ncaulk\naroma\ncynic\nrobin\nultra\nulcer\npause\nhumor\nframe\nelder\nskill\naloft\npleat\nshard\nmoist\nthose
+light\nwrung\ncould\nperky\nmount\nwhack\nsugar\nknoll\ncrimp\nwince\nprick\nrobot\npoint\nproxy\nshire\nsolar\npanic
+tangy\nabbey\nfavor\ndrink\nquery\ngorge\ncrank\nslump\nbanal\ntiger\nsiege\ntruss\nboost\nrebus\nunify\ntroll\ntapir
+aside\nferry\nacute\npicky\nweary\ngripe\ncraze\npluck\nbrake\nbaton\nchamp\npeach\nusing\ntrace\nvital\nsonic\nmasse
+conic\nviral\nrhino\nbreak\ntriad\nepoch\nusher\nexult\ngrime\ncheat\nsolve\nbring\nprove\nstore\ntilde\nclock\nwrote
+retch\nperch\nrouge\nradio\nsurer\nfiner\nvodka\nheron\nchill\ngaudy\npithy\nsmart\nbadly\nrogue\ngroup\nfixer\ngroin
+duchy\ncoast\nblurt\npulpy\naltar\ngreat\nbriar\nclick\ngouge\nworld\nerode\nboozy\ndozen\nfling\ngrowl\nabyss\nsteed
+enema\njaunt\ncomet\ntweed\npilot\ndutch\nbelch\nought\ndowry\nthumb\nhyper\nhatch\nalone\nmotor\naback\nguild\nkebab
+spend\nfjord\nessay\nspray\nspicy\nagate\nsalad\nbasic\nmoult\ncorny\nforge\ncivic\nislet\nlabor\ngamma\nlying\naudit
+round\nloopy\nlusty\ngolem\ngoner\ngreet\nstart\nlapel\nbiome\nparry\nshrub\nfront\nwooer\ntotem\nflick\ndelta\nbleed
+argue\nswirl\nerror\nagree\noffal\nflume\ncrass\npanel\nstout\nbribe\ndrain\nyearn\nprint\nseedy\nivory\nbelly\nstand
+first\nforth\nbooby\nflesh\nunmet\nlinen\nmaxim\npound\nmimic\nspike\ncluck\ncrate\ndigit\nrepay\nsower\ncrazy\nadobe
+outdo\ntrawl\nwhelp\nunfed\npaper\nstaff\ncroak\nhelix\nfloss\npride\nbatty\nreact\nmarry\nabase\ncolon\nstool\ncrust
+fresh\ndeath\nmajor\nfeign\nabate\nbench\nquiet\ngrade\nstink\nkarma\nmodel\ndwarf\nheath\nserve\nnaval\nevade\nfocal
+blush\nawake\nhumph\nsissy\nrebut\ncigar`.split('\n');
+
+                this.originalUnusedWordlePool = `soare\nroate\nsalet\ncarte\ncaret\npooch\nhippy\ngulch\ngodly\nfleet
+grave\nshock\nvalve\nclaim\nquasi\narise\nopium\nstuck\nrecut\nplume\nrifle\nincur\nwrest\nmocha\nsafer\nmound\npagan
+blast\nmelee\nlefty\npaste\ngroan\nloose\nsadly\nspilt\nslack\nsheen\neerie\nminty\nslick\nderby\nwharf\nsinge\nspawn
+fairy\nfilmy\nstack\nniece\nwoozy\nstank\ndiode\nvalor\nmuddy\nreply\nspoil\narson\nsleet\ncouch\npalsy\nbowel\ncreek
+lance\nidiot\nsiren\nembed\ndross\nannul\nladen\nelite\nlymph\nedify\nmight\nreset\nvisit\ngusto\npurse\nvapor\ncrock
+loath\nchaff\nslide\nqueer\naping\npushy\ntamer\nawoke\nswift\nexile\nfreer\nrisky\nghost\nplier\nwinch\nlurch\nsavvy
+pried\nchump\ncress\neater\ncycle\nkitty\nboule\nmoron\ntenet\nlobby\nplush\nvigil\nblink\nclung\ncroup\nclink\njuicy
+flier\nchina\nvowel\ngnome\nsnuck\nspiny\nrigor\nrabid\npoppy\nbudge\nmoldy\ndowdy\ncaddy\nquell\ndumpy\npaler\nswore
+rebar\nscuba\nhorny\namply\novary\ncliff\ntruce\nfritz\nllama\neaten\nhovel\nrehab\nsigma\ndying\nfetid\nscion\ngayly
+musky\ndally\nbless\nruler\nfluid\ntatty\ncutie\nbluer\naider\nshook\nriver\nprivy\nbetel\nfrisk\nbegun\nweave\nwryly
+assay\nbloom\nlater\nsilky\nwreck\nsmack\namaze\ncivil\nvista\nbeech\njetty\nvocal\neight\ndiver\nposer\nalley\ncreed
+anime\nbosom\ndunce\npudgy\nwaive\noutgo\nbilge\nideal\nclasp\nseize\nhotly\nsieve\ngrape\nnoose\nhardy\nshied\ndrawl
+putty\nstrut\nburnt\ntulip\ncrick\nidyll\nvixen\nfuror\ngeeky\ncough\nshoal\nstork\naunty\nfurry\nrazor\nelect\nevict
+imply\ndemur\nhaven\ncavil\nswear\ncrump\ndough\ngavel\nsalon\nharem\nsworn\ncabin\nminor\nfatty\nhusky\nslime\nglint
+tread\nsteal\nmurky\nspore\nhoist\nbuxom\ndimly\nlevel\nsumac\nstilt\narena\nslimy\nsepia\nshady\nfriar\nreign\ndairy
+quill\nbrood\ntuber\nposit\nblank\npiggy\nfreak\namong\nfecal\nalgae\nrabbi\namuse\nbushy\ncopse\nknife\npouch\nplane
+snide\nrelay\nrajah\ndilly\ncrash\ntrick\nwoody\ncomic\nclued\ncreep\ncaste\ngraze\nsnuff\ngonad\ndrunk\nlurid\nbuyer
+utile\nsmell\nmodal\nadorn\nroast\nsheik\nmissy\ngrunt\nmafia\nemcee\narray\nsouth\nskulk\ntubal\nswami\nnotch\nalign
+puree\nvenue\nswarm\noffer\ndryly\ndrank\ntheta\njunto\nquoth\nshalt\namend\ndatum\nsuing\nrearm\ncoral\nworth\novoid
+randy\nchuck\nprank\nbegat\ntarot\nradar\nbylaw\nsteak\niliac\nblunt\npuppy\npenal\njoist\nbunny\nstunt\nfluke\nafoot
+bloat\ndense\nsneer\njumbo\nshort\nslurp\npizza\nconch\nbible\nafoul\nsavoy\nbeard\narose\nmotif\nbroil\nglare\nbaggy
+mammy\nswamp\nalong\nrugby\nwager\nquack\nmange\ntramp\nspurn\nnadir\ncomfy\nremit\ngruff\nester\nleast\nmogul\nfetch
+oaken\nmeaty\ngaffe\nracer\npoesy\ntweet\nwaist\ngrope\ngiver\nannoy\ngravy\nwider\ndeign\nelide\nrigid\nrenal\npence
+rowdy\nshoot\nenvoy\nposse\nabort\nfiery\ntrunk\nscalp\nbitty\nsegue\ncreme\ngrill\nnobly\nspeed\ngipsy\ndread\nburst
+kappa\namity\nsynod\nhaunt\nchair\ndetox\nshrew\ntense\nplied\nquark\nnovel\nwaxen\nblitz\nlyric\nhussy\nquilt\nbingo
+wispy\nhonor\nradii\nskull\nissue\nurine\ngassy\ntrial\nlatch\nwight\nbrick\nholly\ngrass\nshack\nmover\ndefer\nsober
+optic\ncrier\nnomad\nflute\nshark\ndrier\nobese\ncruel\nbleat\nslush\nsemen\ndusty\nshone\nhymen\nabuse\nfugue\npansy
+welsh\ndrake\nfreed\nafire\nshirt\noddly\nplaid\nblind\nenemy\ntying\ngazer\nextol\ndecor\nerase\nelegy\nspunk\nscaly
+chick\nsooty\ncanal\nslash\nquake\nswept\nprude\nwield\nfemme\nshale\nscrew\nspree\nsmoky\nglade\nprism\nstoke\norbit
+guilt\nhumus\nnoisy\nshiny\nelate\nwhole\nsword\ncleat\npuffy\nfilly\nbilly\nclout\novate\nchili\ncurio\nfable\npesto
+unwed\nchurn\nstump\nlease\nwitty\nwimpy\nspoof\nsaner\nblend\nthick\nwarty\nmanic\nsquib\nhaste\nteeth\nicily\ningot
+juror\nblood\nabode\nunity\npivot\nslept\nsewer\nparse\nmorph\ncacti\nspool\ndemon\nmoody\nannex\nwater\nlumpy\nadmin
+omega\ntabby\nbasis\nbotch\nlousy\nslain\ncubic\nwrack\nfoist\nfraud\nharpy\nscoop\nolden\ndebar\ncairn\ntulle\ncrude
+plain\nsperm\nabbot\nbound\nbefit\nguess\ncaput\nleant\nswing\nopine\nlupus\ngumbo\nchasm\nlipid\narmor\nabled\nmaker
+dusky\ndizzy\nlegal\nfatal\nbegan\nslant\ntorus\nninny\ncovey\nviper\nvogue\nowing\ntoken\nentry\nbooth\nchide\nelfin
+minim\nkneed\nankle\ntribe\ncease\nodder\nterra\ntried\nclack\ncolor\nweigh\nuncut\nstrip\nvicar\ndress\nditch\ngypsy
+taffy\nswoop\nsixty\nsheer\nleper\nnosey\nbulge\nclamp\nbrand\nbutte\ndrill\ntenor\ndrama\ncobra\nbasil\nbused\nproof
+petal\npouty\nthrob\nfetal\nmacro\ndodgy\nsatyr\nrarer\nnutty\nsplit\nmyrrh\nwidth\nsonar\ntower\nbaron\nwaver\nsloop
+smote\nbaler\nfrill\ndrift\nlimbo\nfence\nmotel\ncello\nsalve\nimbue\nstave\nfight\nprawn\napnea\nboard\nbrawl\nslunk
+raspy\nforum\nwomen\nmucus\ntoddy\ncoven\ntumor\ntruer\naxial\npurer\ndaily\nnylon\nplump\nberry\nerect\nsnipe\nsinew
+penny\njumpy\nrally\numbra\nscary\ngross\navian\nsatin\nparka\nsniff\ntrump\nreuse\navoid\nliken\ngloss\ngayer\ndealt
+sling\nrumor\ntonga\nwound\nwhite\netude\npaddy\nfizzy\nsurge\nbelle\nsalvo\nfruit\nsappy\ntaker\novine\nspiky\nreedy
+filth\nspasm\nclank\nlumen\nspook\nsauce\nlathe\ndirty\nslyly\nalloy\ntaint\nsheep\nkinky\nwooly\nquail\nbrunt\ncurvy
+cagey\nrinse\ndeuce\nmilky\nbison\ngraft\nhedge\ngirly\nswash\nboney\ncoupe\nabhor\nwelch\ntight\ngeese\nmiser\nmirth
+cabal\npecan\ndroit\nguise\nralph\ntango\nbiddy\nmower\npayee\nserif\ndrape\nspank\nallot\ntruck\nvirus\ntesty\ntepee
+zonal\ncurry\nbanjo\naxion\nbezel\nnasal\ngooey\nfiler\nallay\npubic\nraven\nplead\nflaky\nmunch\ndully\neking\nslink
+theft\npygmy\nwring\nmamma\nnewer\ndrown\nvegan\nchess\nunion\nlever\nlorry\ncabby\ndruid\ncried\ncrony\nstunk\ntimid
+batch\ngauge\nrotor\ncrack\ncurve\nsoapy\ndried\nscene\nroost\nthong\npunch\npasty\ndowny\nclang\nstuff\nmecca\nsetup
+verso\nfauna\nnewly\nfussy\nguava\nratty\nfudge\nfemur\nchirp\nalibi\npetty\ngolly\nfleck\nfelon\ngourd\nthrum\nficus
+wiser\njunta\ndaunt\nscree\nstoop\nmangy\neying\ninlet\npulse\nteddy\nsully\nsnore\nripen\nsnowy\nattic\nleach\nmouth
+clump\ntonal\nbigot\nperil\nhaute\nspied\nundid\nbasal\nsteer\nloamy\nscamp\nvaunt\nwilly\nriser\ntwixt\nflush\ncatty
+login\nroger\nrefit\nrural\nbobby\neclat\nfella\ngaily\nharry\nhasty\nhydro\nliege\noctal\nombre\npayer\nsooth\nunset
+vomit\nfanny`.split('\n');
+
+                // Initialize state
+                this.recentPastSolutions = [];
+                this.upcomingSolutions = [];
+                this.eligibleWords = [];
+                this.scores = [];
+                this.highestDate = null;
+
+                // Initialize on construction
+                this.initialize();
+            }
+
+            // Main method to run the optimizer
+            async run(showTop100 = false) {
+                await this.downloadFutureSolutions();
+                this.filterEligibleWords();
+                this.scoreWords();
+                this.displayResults(showTop100);
+            }
+
+            // Initialize by loading solutions from localStorage
+            initialize() {
+                const lastDate = localStorage.getItem('lastSolutionDate');
+                if (lastDate) {
+                    this.highestDate = lastDate;
+                    document.getElementById('lastUpdated').textContent = `Last updated: ${this.highestDate}`;
+
+                    this.loadSolutionsFromLocalStorage();
+                    this.categorizeSolutions();
+                }
+            }
+
+            // Load all solutions from localStorage
+            loadSolutionsFromLocalStorage() {
+                const startDate = new Date('2025-06-01');
+                const endDate = new Date(this.highestDate);
+                const allSolutions = [];
+
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    const solution = localStorage.getItem(`solution_${dateStr}`);
+                    if (solution) {
+                        allSolutions.push({ date: dateStr, solution });
+                    }
+                }
+
+                return allSolutions;
+            }
+
+            // Categorize solutions into past and upcoming
+            categorizeSolutions() {
+                const today = new Date();
+                const allSolutions = this.loadSolutionsFromLocalStorage();
+
+                this.recentPastSolutions = allSolutions
+                    .filter(item => new Date(item.date) < today)
+                    .map(item => item.solution);
+
+                this.upcomingSolutions = allSolutions
+                    .filter(item => new Date(item.date) >= today)
+                    .map(item => item.solution);
+            }
+
+            // Fetch future solutions
+            async downloadFutureSolutions() {
+                const loading = document.getElementById('loading');
+                loading.style.display = 'block';
+
+                try {
+                    const lastDate = localStorage.getItem('lastSolutionDate');
+                    let startDate = lastDate ? new Date(lastDate) : new Date('2025-06-01');
+                    const fetchedSolutions = [];
+
+                    // Fetch solutions until we hit a 404
+                    while (true) {
+                        const dateStr = startDate.toISOString().split('T')[0];
+                        const response = await fetch(`${window.location.origin}/${dateStr}`);
+
+                        if (response.status === 404) break;
+                        if (response.status !== 200) {
+                            console.error('Error fetching solution for', dateStr, response.status);
+                            alert('Error fetching solutions');
+                            break;
+                        }
+
+                        const data = await response.json();
+                        fetchedSolutions.push({ date: dateStr, solution: data.solution });
+                        this.highestDate = dateStr;
+
+                        // Store in localStorage
+                        localStorage.setItem(`solution_${dateStr}`, data.solution);
+                        localStorage.setItem('lastSolutionDate', dateStr);
+
+                        startDate.setDate(startDate.getDate() + 1);
+                    }
+
+                    // Update last updated text
+                    document.getElementById('lastUpdated').textContent = `Last updated: ${this.highestDate}`;
+
+                    // Re-categorize solutions with newly fetched data
+                    this.categorizeSolutions();
+
+                } catch (error) {
+                    console.error('Error fetching solutions:', error);
+                } finally {
+                    loading.style.display = 'none';
+                }
+            }
+
+            // Filter eligible words, excluding upcoming solutions
+            filterEligibleWords() {
+                const allWords = [...this.usedWordPool, ...this.originalUnusedWordlePool, ...this.recentPastSolutions];
+                this.eligibleWords = allWords.filter(word => !this.upcomingSolutions.includes(word));
+                // Remove duplicates to match Ruby's behavior
+                this.eligibleWords = [...new Set(this.eligibleWords)];
+            }
+
+            // Score all eligible words
+            scoreWords() {
+                this.scores = this.eligibleWords.map(word => [word, this.scoreWord(word)])
+                    .sort((a, b) => b[1] - a[1]);
+            }
+
+            // Score a single word against all upcoming solutions
+            scoreWord(word) {
+                if (this.upcomingSolutions.length === 0) {
+                    return 0; // No solutions to score against
+                }
+
+                const baseScore = this.upcomingSolutions.reduce((sum, solution) => {
+                    return sum + this.scoreAgainstSolution(word, solution);
+                }, 0) / this.upcomingSolutions.length;
+
+                // Add bonus for unique letters
+                const uniqueLettersBonus = new Set(word).size === 5 ? baseScore * 0.15 : 0;
+
+                // Add letter frequency bonus
+                const frequencyBonus = word.split('').reduce((sum, c) => sum + (this.LETTER_FREQUENCIES[c] || 0), 0) / 5;
+                const scaledFrequencyBonus = frequencyBonus * 0.05;
+
+                // Add bonus for repeated common letters
+                let repeatedLetterBonus = 0;
+                if (new Set(word).size < 5) {
+                    const letterCounts = {};
+                    for (const c of word) {
+                        letterCounts[c] = (letterCounts[c] || 0) + 1;
+                    }
+                    const repeatedLetters = Object.entries(letterCounts)
+                        .filter(([_, count]) => count > 1)
+                        .map(([letter]) => letter);
+                    repeatedLetterBonus = repeatedLetters.reduce((sum, letter) =>
+                        sum + (this.LETTER_FREQUENCIES[letter] || 0), 0) * 0.02;
+                }
+
+                return baseScore + uniqueLettersBonus + scaledFrequencyBonus + repeatedLetterBonus;
+            }
+
+            // Score a word against a single solution
+            scoreAgainstSolution(word, solution) {
+                const guess = word.split('');
+                const answer = solution.split('');
+                const guessUsed = Array(5).fill(false);
+                const answerUsed = Array(5).fill(false);
+                let greenMatches = 0;
+                let yellowMatches = 0;
+
+                // First pass: greens
+                for (let i = 0; i < 5; i++) {
+                    if (guess[i] === answer[i]) {
+                        greenMatches++;
+                        guessUsed[i] = true;
+                        answerUsed[i] = true;
+                    }
+                }
+
+                // Second pass: yellows
+                for (let i = 0; i < 5; i++) {
+                    if (guessUsed[i]) continue;
+                    for (let j = 0; j < 5; j++) {
+                        if (answerUsed[j]) continue;
+                        if (guess[i] === answer[j]) {
+                            yellowMatches++;
+                            guessUsed[i] = true;
+                            answerUsed[j] = true;
+                            break;
+                        }
+                    }
+                }
+
+                return greenMatches * 3 + yellowMatches;
+            }
+
+            // Display results
+            displayResults(showTop100 = false) {
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+
+                if (showTop100) {
+                    const title = document.createElement('h2');
+                    title.textContent = 'Top 100 Optimal Starting Words';
+                    resultsDiv.appendChild(title);
+                } else {
+                    const title = document.createElement('h2');
+                    title.textContent = 'Optimal Starting Word Pair';
+                    resultsDiv.appendChild(title);
+                }
+
+                const wordList = document.createElement('div');
+                wordList.className = 'word-list';
+
+                if (showTop100) {
+                    this.scores.slice(0, 100).forEach(([word, score], i) => {
+                        const wordItem = document.createElement('div');
+                        wordItem.className = 'word-item';
+                        wordItem.textContent = `${i + 1}. ${word.toUpperCase()} (${score.toFixed(5)})`;
+                        wordList.appendChild(wordItem);
+                    });
+                } else {
+                    const [topWord, topScore] = this.scores[0];
+                    const wordItem = document.createElement('div');
+                    wordItem.className = 'word-item';
+                    wordItem.textContent = `1. ${topWord.toUpperCase()} (${topScore.toFixed(5)})`;
+                    wordList.appendChild(wordItem);
+
+                    // Find next best word with no shared letters
+                    const topWordChars = new Set(topWord);
+                    const nextWord = this.scores.slice(1).find(([word]) =>
+                        !word.split('').some(c => topWordChars.has(c))
+                    );
+
+                    if (nextWord) {
+                        const nextWordItem = document.createElement('div');
+                        nextWordItem.className = 'word-item';
+                        nextWordItem.textContent = `2. ${nextWord[0].toUpperCase()} (${nextWord[1].toFixed(5)})`;
+                        wordList.appendChild(nextWordItem);
+                    }
+                }
+
+                resultsDiv.appendChild(wordList);
+            }
+        }
+
+        // Create instance and initialize
+        const wordleOptimizer = new WordleOptimizer();
+    </script>
+</body>
+</html>
