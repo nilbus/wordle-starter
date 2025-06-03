@@ -80,7 +80,7 @@ class WordleOptimizer
   def score_word(word)
     base_score = recent_solutions.sum do |solution|
       score_against_solution(word, solution)
-    end
+    end.to_f / upcoming_solutions.length
 
     # Add a bonus for words with unique letters
     # The bonus is 10% of the base score if all letters are unique
