@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordle Optimizer</title>
+    <title>Wordle Start Word of the Day</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -35,6 +35,21 @@
             padding: 8px 12px;
             border-radius: 4px;
             font-family: monospace;
+        }
+        .word-item-line {
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 2em;
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+        .explainer-line {
+            padding: 8px 12px;
+            border-radius: 4px;
+            grid-column: 1 / -1;
+            text-align: center;
         }
         .controls {
             margin: 20px 0;
@@ -70,11 +85,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Wordle Optimizer</h1>
-        <div class="controls">
-            <button onclick="wordleOptimizer.run(false)">Find Best Words</button>
-            <button onclick="wordleOptimizer.run(true)">Show Top 100</button>
-        </div>
+        <h1>Wordle Start Word of the Day</h1>
         <div class="loading" id="loading">Loading...</div>
         <div id="results"></div>
         <div class="last-updated" id="lastUpdated"></div>
@@ -264,6 +275,11 @@ vomit\nfanny`.split('\n');
                     this.loadSolutionsFromLocalStorage();
                     this.categorizeSolutions();
                 }
+
+                // Run automatically on page load with appropriate mode
+                const urlParams = new URLSearchParams(window.location.search);
+                const showTop100 = urlParams.has('100');
+                this.run(showTop100);
             }
 
             // Load all solutions from localStorage
@@ -330,8 +346,7 @@ vomit\nfanny`.split('\n');
                         startDate.setDate(startDate.getDate() + 1);
                     }
 
-                    // Update last updated text
-                    document.getElementById('lastUpdated').textContent = `Last updated: ${this.highestDate}`;
+                    document.getElementById('lastUpdated').textContent = `Optimized through ${this.highestDate}`;
 
                     // Re-categorize solutions with newly fetched data
                     this.categorizeSolutions();
@@ -431,16 +446,6 @@ vomit\nfanny`.split('\n');
                 const resultsDiv = document.getElementById('results');
                 resultsDiv.innerHTML = '';
 
-                if (showTop100) {
-                    const title = document.createElement('h2');
-                    title.textContent = 'Top 100 Optimal Starting Words';
-                    resultsDiv.appendChild(title);
-                } else {
-                    const title = document.createElement('h2');
-                    title.textContent = 'Optimal Starting Word Pair';
-                    resultsDiv.appendChild(title);
-                }
-
                 const wordList = document.createElement('div');
                 wordList.className = 'word-list';
 
@@ -454,8 +459,8 @@ vomit\nfanny`.split('\n');
                 } else {
                     const [topWord, topScore] = this.scores[0];
                     const wordItem = document.createElement('div');
-                    wordItem.className = 'word-item';
-                    wordItem.textContent = `1. ${topWord.toUpperCase()} (${topScore.toFixed(5)})`;
+                    wordItem.className = 'word-item-line';
+                    wordItem.textContent = `1. ${topWord.toUpperCase()}`;
                     wordList.appendChild(wordItem);
 
                     // Find next best word with no shared letters
@@ -465,9 +470,13 @@ vomit\nfanny`.split('\n');
                     );
 
                     if (nextWord) {
+                        const explainer = document.createElement('div');
+                        explainer.className = 'explainer-line';
+                        explainer.textContent = "This second word has no letters in common with the first word."
+                        wordList.appendChild(explainer)
                         const nextWordItem = document.createElement('div');
-                        nextWordItem.className = 'word-item';
-                        nextWordItem.textContent = `2. ${nextWord[0].toUpperCase()} (${nextWord[1].toFixed(5)})`;
+                        nextWordItem.className = 'word-item-line';
+                        nextWordItem.textContent = `2. ${nextWord[0].toUpperCase()}`;
                         wordList.appendChild(nextWordItem);
                     }
                 }
